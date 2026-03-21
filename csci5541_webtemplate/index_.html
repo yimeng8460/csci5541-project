@@ -1,0 +1,449 @@
+<!DOCTYPE html>
+<html lang="en-US">
+<head>
+  <meta charset="UTF-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>How Much Language Modeling Does Scene Text Recognition Need? | CSCI 5541</title>
+
+  <link rel="stylesheet" href="./files/bulma.min.css" />
+  <link rel="preconnect" href="https://fonts.gstatic.com/">
+  <link href="https://fonts.googleapis.com/css2?family=Source+Serif+4:opsz,wght@8..60,300;8..60,400;8..60,600;8..60,700&family=Inter:wght@300;400;500;600&display=swap" rel="stylesheet">
+
+  <style>
+    :root {
+      --maroon: #7A0019;
+      --gold: #FFCC33;
+      --text: #222;
+      --text-light: #555;
+      --bg: #fdfdfd;
+      --rule: #ddd;
+      --table-head: #7A0019;
+      --table-stripe: #faf8f5;
+      --highlight: #fff8e1;
+      --finding-bg: #f7f5f0;
+    }
+
+    * { box-sizing: border-box; }
+
+    body {
+      margin: 0;
+      padding: 0;
+      background: var(--bg);
+      color: var(--text);
+      font-family: 'Source Serif 4', Georgia, 'Times New Roman', serif;
+      font-size: 17px;
+      line-height: 1.75;
+      -webkit-font-smoothing: antialiased;
+    }
+
+    .hero {
+      background: linear-gradient(160deg, var(--maroon), #4a001a);
+      color: #fff;
+      text-align: center;
+      padding: 56px 24px 44px;
+    }
+    .hero h1 {
+      font-family: 'Inter', Helvetica, Arial, sans-serif;
+      font-weight: 700;
+      font-size: 2em;
+      line-height: 1.25;
+      margin: 0 auto 10px;
+      max-width: 720px;
+      color: #fff;
+    }
+    .hero .meta {
+      font-family: 'Inter', sans-serif;
+      font-size: 0.92em;
+      color: var(--gold);
+      margin-bottom: 2px;
+    }
+    .hero .team {
+      font-family: 'Inter', sans-serif;
+      font-size: 0.88em;
+      color: rgba(255,255,255,0.6);
+      margin-bottom: 22px;
+    }
+    .hero .authors {
+      font-family: 'Inter', sans-serif;
+      font-size: 0.95em;
+      color: rgba(255,255,255,0.92);
+      margin-bottom: 24px;
+    }
+    .hero .authors span { margin: 0 10px; }
+    .hero .links a {
+      display: inline-block;
+      font-family: 'Inter', sans-serif;
+      font-size: 0.85em;
+      border: 1.4px solid var(--gold);
+      color: var(--gold);
+      padding: 5px 18px;
+      border-radius: 18px;
+      margin: 4px 5px;
+      text-decoration: none;
+      transition: background 0.2s, color 0.2s;
+    }
+    .hero .links a:hover {
+      background: var(--gold);
+      color: var(--maroon);
+    }
+
+    .content {
+      max-width: 780px;
+      margin: 0 auto;
+      padding: 36px 24px 60px;
+    }
+
+    .content h2 {
+      font-family: 'Inter', Helvetica, Arial, sans-serif;
+      font-weight: 700;
+      font-size: 1.45em;
+      color: var(--maroon);
+      margin: 48px 0 6px;
+      padding-bottom: 6px;
+      border-bottom: 2px solid var(--gold);
+    }
+    .content h3 {
+      font-family: 'Inter', sans-serif;
+      font-weight: 600;
+      font-size: 1.08em;
+      color: var(--text);
+      margin: 28px 0 8px;
+    }
+    .content p {
+      margin-bottom: 14px;
+    }
+    .content a {
+      color: var(--maroon);
+      text-decoration: underline;
+      text-decoration-color: var(--gold);
+      text-underline-offset: 2px;
+    }
+    .content a:hover { color: #000; }
+
+    .figure {
+      text-align: center;
+      margin: 28px 0;
+    }
+    .figure img {
+      max-width: 100%;
+      border-radius: 4px;
+    }
+    .figure .caption {
+      font-family: 'Inter', sans-serif;
+      font-size: 0.82em;
+      color: #888;
+      margin-top: 8px;
+      line-height: 1.45;
+    }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      margin: 20px 0;
+      font-family: 'Inter', sans-serif;
+      font-size: 0.88em;
+      line-height: 1.5;
+    }
+    thead th {
+      background: var(--table-head);
+      color: #fff;
+      font-weight: 600;
+      padding: 9px 12px;
+      text-align: center;
+      border: none;
+    }
+    thead th:first-child { border-radius: 5px 0 0 0; }
+    thead th:last-child { border-radius: 0 5px 0 0; }
+    tbody td {
+      padding: 8px 12px;
+      text-align: center;
+      border-bottom: 1px solid #eee;
+    }
+    tbody tr:nth-child(even) { background: var(--table-stripe); }
+    tbody tr:hover { background: var(--highlight); }
+    .best { font-weight: 700; color: var(--maroon); }
+    .anomaly td { color: #c0392b; }
+    .hl-row td { background: rgba(255,204,51,0.10); }
+    table caption {
+      caption-side: bottom;
+      text-align: left;
+      font-size: 0.86em;
+      color: #999;
+      padding: 6px 2px 0;
+      line-height: 1.4;
+    }
+
+    .finding {
+      background: var(--finding-bg);
+      border-left: 3.5px solid var(--maroon);
+      padding: 14px 18px;
+      margin: 18px 0;
+      border-radius: 0 4px 4px 0;
+    }
+    .finding p { margin: 0; font-size: 0.96em; }
+    .finding strong { color: var(--maroon); }
+
+    hr {
+      border: none;
+      border-top: 1px solid var(--rule);
+      margin: 44px 0;
+    }
+
+    .footer {
+      text-align: center;
+      font-family: 'Inter', sans-serif;
+      font-size: 0.8em;
+      color: #bbb;
+      padding: 20px 24px 32px;
+    }
+
+    @media (max-width: 600px) {
+      .hero h1 { font-size: 1.5em; }
+      .content { padding: 24px 16px 40px; }
+      table { font-size: 0.8em; }
+      thead th, tbody td { padding: 6px 7px; }
+    }
+  </style>
+
+  <base href="." target="_blank">
+</head>
+
+<body>
+
+<div class="hero">
+  <h1>How Much Language Modeling Does Scene Text Recognition Need?</h1>
+  <p class="meta">Spring 2026 CSCI 5541 NLP &mdash; University of Minnesota</p>
+  <p class="team">OOM Again &nbsp;|&nbsp; Mentors: Jiyoon Pyo, Nathan</p>
+  <p class="authors">
+    <span>Haoyang Chen</span>
+    <span>Yimeng Zhang</span>
+    <span>Oscar Yip</span>
+  </p>
+  <div class="links">
+    <a href="">Final Report</a>
+    <a href="https://github.com/knowledge-computing/TiCLS">TiCLS Code</a>
+    <a href="">Our Code</a>
+  </div>
+</div>
+
+<div class="content">
+
+<h2>Abstract</h2>
+<p>
+TiCLS (WACV 2026) improves scene text spotting by adding a 6-layer pretrained BART decoder to the DeepSolo visual pipeline, injecting character-level language knowledge into the recognition process. This design achieves state-of-the-art accuracy, but it nearly triples the parameter count (from 36M to 96M) and increases inference time by over 4x. Since scene text in the wild typically consists of only one to three words, a natural question arises: are all six decoder layers actually necessary?
+</p>
+<p>
+We conducted a controlled ablation study on ICDAR 2015, training five decoder-depth variants (0, 1, 2, 3, and 6 layers) under identical conditions. Our results show that a 3-layer decoder achieves 94% of the full model's end-to-end recognition accuracy while using half the decoder parameters and reducing inference latency by 29%. We further find that deeper decoder layers primarily benefit long words (11+ characters), while the accuracy gap between in-vocabulary and out-of-vocabulary words remains stable at approximately 20 percentage points across all depths. These findings suggest that TiCLS's linguistic decoder is substantially over-parameterized for the short text sequences typical of scene text.
+</p>
+
+<hr>
+
+<h2>Teaser Figure</h2>
+<div class="figure">
+  <img src="./files/teaser.png" alt="TiCLS Architecture">
+  <p class="caption">Figure 1. Overall architecture of TiCLS (Jang et al., WACV 2026). The blue block is the Transformer Linguistic Decoder initialized from a pretrained BART-style language model. This is the component we ablate by varying its depth from 6 layers down to 0.</p>
+</div>
+
+<hr>
+
+<h2>Introduction / Background / Motivation</h2>
+
+<h3>What problem are we solving?</h3>
+<p>
+Scene text spotting is the task of detecting and recognizing text that appears in photographs of the real world. Examples include street signs, restaurant menus, product labels, and license plates. This is a difficult task because text in natural images is often blurry, partially hidden, curved, or distorted by perspective. When visual cues alone are insufficient to read the text, language knowledge can help fill in the gaps, just as humans use context to read degraded text.
+</p>
+<p>
+TiCLS addresses this by adding a pretrained linguistic decoder on top of DeepSolo's visual pipeline. The decoder consists of six standard transformer layers initialized from a character-level BART model that has been pretrained on a large text corpus. During inference, the decoder takes the visual embeddings from DeepSolo and refines the text predictions using its learned language knowledge. This design improves recognition accuracy, particularly on long words and words the model has never seen during training.
+</p>
+
+<h3>What are the limits of current practice?</h3>
+<p>
+The improvement comes at a steep computational cost. TiCLS has 98.5 million parameters compared to DeepSolo's 36.0 million, and its inference time on a single GPU increases from approximately 855ms to nearly 4 seconds per image. The linguistic decoder alone accounts for 57.6 million parameters, which is 60% of the entire model. Despite this, the TiCLS paper does not investigate whether all six decoder layers are necessary, or whether a shallower decoder could achieve comparable results at lower cost.
+</p>
+
+<h3>Why does this matter?</h3>
+<p>
+Understanding how much language modeling depth is actually needed for scene text has both practical and scientific value. On the practical side, a lighter decoder would make TiCLS viable for deployment on mobile devices and edge hardware where memory and latency are constrained. On the scientific side, this question connects to a broader theme in NLP research: the observation that pretrained transformer models often contain significant layer-level redundancy. Sajjad et al. (2023) showed that BERT can lose 40% of its layers while retaining 98% of performance on GLUE tasks. DistilBERT (Sanh et al., 2019) compresses 6-layer BERT down to 3 layers with 97% accuracy retained. Our study applies this same intuition to a visual-linguistic architecture operating on extremely short text, a setting that has not been explored before.
+</p>
+
+<hr>
+
+<h2>Approach</h2>
+
+<h3>Experimental design</h3>
+<p>
+Our approach is deliberately simple. We keep the entire DeepSolo visual pipeline unchanged: the ViTAEv2 backbone, the transformer visual encoder, and the transformer visual decoder all remain frozen at their original configurations. The only component we modify is the linguistic decoder, whose depth we vary across five configurations: 0 layers (no decoder, equivalent to DeepSolo with an expanded vocabulary), 1 layer, 2 layers, 3 layers, and 6 layers (the original TiCLS configuration).
+</p>
+<p>
+For each reduced-depth variant, we initialize the decoder using the first k layers from the pretrained 6-layer BART checkpoint provided by the TiCLS authors. This ensures that every variant starts from the same pretrained weights. The TiCLS paper reports that randomly initialized decoders fail to converge, so proper initialization is critical. All five variants are trained for 20,000 iterations on ICDAR 2015 (979 training images, 500 test images) with identical hyperparameters: the same learning rate schedule, batch size, optimizer, and data augmentation pipeline.
+</p>
+
+<h3>What we measure</h3>
+<p>
+We evaluate along two axes. The first is recognition quality, measured by Hmean (F1) under both lexicon-free (None) and Generic lexicon settings on the ICDAR 2015 test set. Beyond the aggregate score, we perform a word-level analysis by matching each predicted word to its ground-truth annotation via polygon IoU (threshold 0.5). This produces per-word accuracy breakdowns along two linguistically motivated dimensions: word length (short words of 5 or fewer characters, medium words of 6 to 10 characters, and long words of 11 or more characters) and vocabulary familiarity (words that appear in the training set versus words that do not).
+</p>
+<p>
+The second axis is computational efficiency. We measure inference latency in milliseconds per image on a single Quadro RTX 6000 GPU, batch size 1, averaged over 100 timed runs after 20 warmup iterations. We also report total parameter count, linguistic decoder parameter count, and peak GPU memory usage during inference.
+</p>
+
+<h3>Challenges encountered</h3>
+<p>
+Setting up the experiments required resolving several engineering issues in the TiCLS codebase. The V0 variant (no linguistic decoder) triggered a DDP gradient reduction error because PyTorch's DistributedDataParallel expected all parameters to receive gradients. We fixed this by calling <code>_set_static_graph()</code> on the DDP wrapper. V0 also caused an <code>AttributeError</code> during inference because the code assumed <code>lang_model</code> would always exist; we added a null-check to handle this gracefully.
+</p>
+<p>
+The most unexpected challenge was V2 (2-layer decoder). Despite converging in terms of training loss, the 2-layer decoder collapsed during inference, producing near-all padding tokens. Its PLM loss component remained elevated relative to V1 and V3 throughout training, suggesting that the 2-layer configuration falls into a degenerate local minimum. This is not a code bug but a genuine training instability that we document as a finding rather than an error.
+</p>
+
+<hr>
+
+<h2>Results</h2>
+
+<h3>End-to-end recognition</h3>
+<p>
+Table 1 shows the end-to-end recognition results on the ICDAR 2015 test set. The 6-layer baseline (V6) achieves a Generic E2E Hmean of 0.650. Reducing the decoder to 3 layers (V3) lowers this to 0.612, retaining 94.2% of V6's performance. The 1-layer variant (V1) achieves 0.607, only slightly below V3. V0, which has no linguistic decoder at all, achieves 0.000 on end-to-end recognition because it cannot produce text output (detection only). V2 is anomalous, with near-random recognition output despite normal detection scores.
+</p>
+
+<table>
+  <thead>
+    <tr><th>Variant</th><th>Layers</th><th>Det Hmean</th><th>None E2E</th><th>Generic E2E</th></tr>
+  </thead>
+  <tbody>
+    <tr class="hl-row"><td>V6</td><td>6</td><td>0.899</td><td class="best">0.770</td><td class="best">0.650</td></tr>
+    <tr><td>V3</td><td>3</td><td>0.893</td><td>0.713</td><td>0.612</td></tr>
+    <tr><td>V1</td><td>1</td><td>0.911</td><td>0.674</td><td>0.607</td></tr>
+    <tr class="anomaly"><td>V2</td><td>2</td><td>0.897</td><td>0.124</td><td>0.182</td></tr>
+    <tr><td>V0</td><td>0</td><td>0.888</td><td>0.000</td><td>0.000</td></tr>
+  </tbody>
+  <caption>Table 1. End-to-end F1 on ICDAR 2015 test set. V2 (red) collapsed during inference. V0 is detection only. Detection performance is stable across all variants (~0.89).</caption>
+</table>
+
+<p>
+An important observation is that detection performance (Det Hmean) is essentially identical across all five variants, ranging from 0.888 to 0.911. This confirms that our experimental design successfully isolates the effect of the linguistic decoder: the visual pipeline is unaffected by decoder depth changes.
+</p>
+
+<h3>Accuracy by word length</h3>
+<p>
+Table 2 breaks down single-word recognition accuracy by word length. The ground truth contains 2,077 non-ignored words: 1,280 short, 750 medium, and 47 long. The most striking pattern is how disproportionately deeper decoders benefit long words. Going from V1 (1 layer) to V3 (3 layers), long-word accuracy jumps from 0.255 to 0.468, a gain of over 21 percentage points. In contrast, short-word accuracy actually decreases slightly (0.670 to 0.655). Going from V3 to V6 adds another 4 percentage points on long words (0.468 to 0.511), at the cost of doubling the decoder parameters.
+</p>
+
+<table>
+  <thead>
+    <tr><th>Variant</th><th>Short (&le;5, n=1280)</th><th>Medium (6&ndash;10, n=750)</th><th>Long (&ge;11, n=47)</th></tr>
+  </thead>
+  <tbody>
+    <tr class="hl-row"><td>V6</td><td class="best">0.716</td><td class="best">0.739</td><td class="best">0.511</td></tr>
+    <tr><td>V3</td><td>0.655</td><td>0.683</td><td>0.468</td></tr>
+    <tr><td>V1</td><td>0.670</td><td>0.628</td><td>0.255</td></tr>
+    <tr class="anomaly"><td>V2</td><td>0.123</td><td>0.131</td><td>0.106</td></tr>
+    <tr><td>V0</td><td>0.000</td><td>0.000</td><td>0.000</td></tr>
+  </tbody>
+  <caption>Table 2. Single-word accuracy by word length, matched via polygon IoU &ge; 0.5.</caption>
+</table>
+
+<h3>Accuracy by vocabulary familiarity</h3>
+<p>
+Table 3 compares accuracy on words that appear in the training set (in-vocab, n=1,193) versus words that do not (OOV, n=884). All working variants show an in-vocab advantage of approximately 20 percentage points. This gap is remarkably consistent: 0.220 for V6, 0.198 for V3, and 0.224 for V1. The stability of this gap across depths suggests that the vocabulary prior comes primarily from BART pretraining rather than from additional decoder layers learned during fine-tuning.
+</p>
+
+<table>
+  <thead>
+    <tr><th>Variant</th><th>In-vocab (n=1193)</th><th>OOV (n=884)</th><th>Gap</th></tr>
+  </thead>
+  <tbody>
+    <tr class="hl-row"><td>V6</td><td class="best">0.813</td><td class="best">0.593</td><td>0.220</td></tr>
+    <tr><td>V3</td><td>0.745</td><td>0.547</td><td>0.198</td></tr>
+    <tr><td>V1</td><td>0.741</td><td>0.517</td><td>0.224</td></tr>
+    <tr class="anomaly"><td>V2</td><td>0.138</td><td>0.109</td><td>0.029</td></tr>
+    <tr><td>V0</td><td>0.000</td><td>0.000</td><td>&mdash;</td></tr>
+  </tbody>
+  <caption>Table 3. In-vocabulary vs. out-of-vocabulary accuracy. The ~20pp gap is consistent across working variants.</caption>
+</table>
+
+<h3>Efficiency</h3>
+<p>
+Table 4 reports the computational cost of each variant. Each BART decoder layer adds approximately 9.6 million parameters. The latency increase is substantial: V6 takes nearly 4 seconds per image, while V3 takes 2.8 seconds and V1 takes 1.8 seconds. Memory differences are modest (220 MB from V0 to V6) because the ViTAEv2 backbone dominates memory consumption. The high variance in V1 through V6 latency is caused by variable-length autoregressive decoding: different images produce text sequences of different lengths.
+</p>
+
+<table>
+  <thead>
+    <tr><th>Variant</th><th>Total Params</th><th>Decoder Params</th><th>Latency (ms)</th><th>Peak Memory</th></tr>
+  </thead>
+  <tbody>
+    <tr><td>V0</td><td>38.5M</td><td>0</td><td>855</td><td>2,768 MB</td></tr>
+    <tr><td>V1</td><td>48.9M</td><td>10.4M</td><td>1,846</td><td>2,807 MB</td></tr>
+    <tr><td>V2</td><td>58.3M</td><td>19.8M</td><td>2,413</td><td>2,844 MB</td></tr>
+    <tr class="hl-row"><td>V3</td><td>67.8M</td><td>29.3M</td><td>2,794</td><td>2,880 MB</td></tr>
+    <tr><td>V6</td><td>96.1M</td><td>57.6M</td><td>3,925</td><td>2,988 MB</td></tr>
+  </tbody>
+  <caption>Table 4. Efficiency metrics measured on a single Quadro RTX 6000. V3 (highlighted) is the recommended Pareto-optimal configuration.</caption>
+</table>
+
+<h3>Key findings</h3>
+
+<div class="finding">
+  <p><strong>Finding 1: Deeper layers help long words most.</strong> Going from V1 to V3, long-word accuracy jumps by 21 percentage points (0.255 to 0.468), while short-word accuracy barely changes. BART's sequential context modeling is critical for decoding long character strings that visual features alone cannot disambiguate.</p>
+</div>
+
+<div class="finding">
+  <p><strong>Finding 2: Diminishing returns beyond 3 layers.</strong> V3 achieves 94% of V6's end-to-end accuracy with half the decoder parameters and 29% lower latency. The marginal gain from layers 4 through 6 is only 4 percentage points on long words, at the cost of doubling the decoder size.</p>
+</div>
+
+<div class="finding">
+  <p><strong>Finding 3: The in-vocab/OOV gap is stable across depths.</strong> All working variants show in-vocab accuracy approximately 20 percentage points higher than OOV accuracy. This suggests that vocabulary knowledge is encoded in BART's pretrained weights and is captured even by a single decoder layer, rather than requiring additional depth.</p>
+</div>
+
+<div class="finding">
+  <p><strong>Finding 4: The 2-layer decoder is unstable.</strong> V2 converged in training loss but collapsed during inference, producing near-random output across all word lengths. Its elevated PLM loss during training points to a degenerate local minimum specific to the 2-layer configuration. This non-monotonic failure is itself an interesting finding about the sensitivity of decoder depth to initialization and optimization dynamics.</p>
+</div>
+
+<hr>
+
+<h2>Conclusion, Limitations, and Future Work</h2>
+
+<h3>Summary</h3>
+<p>
+Our ablation study demonstrates that TiCLS's 6-layer linguistic decoder is over-parameterized for scene text recognition. A 3-layer decoder is the best trade-off between accuracy and efficiency, retaining 94% of the full model's end-to-end performance while halving the decoder parameter count. The linguistic decoder's primary contribution is on long and out-of-vocabulary words where visual features alone are insufficient. For short words, even a single decoder layer captures most of the benefit.
+</p>
+
+<h3>Limitations</h3>
+<p>
+Our experiments are conducted exclusively on ICDAR 2015, which contains only English text. The findings may not generalize to other benchmarks (Total-Text, CTW1500) or to multilingual settings. The V2 instability is documented but not fully explained; a deeper investigation into the loss landscape at different decoder depths is needed. We also do not compare against alternative compression techniques such as knowledge distillation or quantization, which could achieve different accuracy-efficiency trade-offs.
+</p>
+
+<h3>Future work</h3>
+<p>
+Several directions remain open. First, attention visualization across decoder layers could reveal what linguistic patterns each layer captures and explain why the upper layers contribute primarily to long-word accuracy. Second, combining layer reduction with knowledge distillation (training the 3-layer decoder to mimic the 6-layer decoder's output) could recover some of the accuracy gap. Third, extending the study to multilingual scene text datasets would test whether language modeling depth requirements change for languages with different character structures.
+</p>
+
+<h3>Reproducibility</h3>
+<p>
+All experiments use the publicly available ICDAR 2015 dataset and the open-source TiCLS codebase. Our training scripts, evaluation code, and pretrained weights for all five variants will be released on GitHub. The experimental setup (single GPU, fixed hyperparameters, identical data splits) is designed for straightforward reproduction.
+</p>
+
+<h3>Ethics</h3>
+<p>
+This work poses no direct societal risk. Scene text recognition technology could in principle be used for surveillance purposes, but our contribution is an analytical study of model efficiency rather than a new capability. The ICDAR 2015 dataset consists of publicly photographed scenes and does not contain sensitive personal information.
+</p>
+
+<hr>
+
+<h2>Team Contributions</h2>
+<p>
+<strong>Haoyang Chen</strong> implemented the decoder depth variants (modifying the TiCLS model code to support 0/1/2/3/6 layer configurations), managed the training pipeline on the MSI cluster, and led the word-length accuracy analysis.
+</p>
+<p>
+<strong>Yimeng Zhang</strong> handled the PLM pretraining for reduced-depth decoders, developed the vocabulary familiarity analysis (in-vocab vs. OOV bucketing), and wrote the project webpage and proposal.
+</p>
+<p>
+<strong>Oscar Yip</strong> built the evaluation pipeline (inference timing with GPU synchronization, parameter counting, memory profiling), debugged the V0 DDP and V2 inference issues, and led the controlled experiment design.
+</p>
+
+</div>
+
+<div class="footer">
+  CSCI 5541 Natural Language Processing &mdash; Spring 2026 &mdash; University of Minnesota
+</div>
+
+</body>
+</html>
