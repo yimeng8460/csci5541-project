@@ -237,16 +237,7 @@ TiCLS (WACV 2026) improves scene text spotting by adding a 6-layer pretrained BA
 We conducted a controlled ablation study on ICDAR 2015, training five decoder-depth variants (0, 1, 2, 3, and 6 layers) under identical conditions. Our results show that a 3-layer decoder achieves 94% of the full model's end-to-end recognition accuracy while using half the decoder parameters and reducing inference latency by 29%. We further find that deeper decoder layers primarily benefit long words (11+ characters), while the accuracy gap between in-vocabulary and out-of-vocabulary words remains stable at approximately 20 percentage points across all depths. These findings suggest that TiCLS's linguistic decoder is substantially over-parameterized for the short text sequences typical of scene text.
 </p>
   
-<!-- 
-<hr>
-<!-- 
-<h2>Teaser Figure</h2>
-<div class="figure">
-  <img src="./files/teaser.png" alt="TiCLS Architecture">
-  <p class="caption">Figure 1. Overall architecture of TiCLS (Jang et al., WACV 2026). The blue block is the Transformer Linguistic Decoder initialized from a pretrained BART-style language model. This is the component we ablate by varying its depth from 6 layers down to 0.</p>
-</div> -->
 
-<!-- <hr> --> -->
 
 <h2>Introduction / Background / Motivation</h2>
 
